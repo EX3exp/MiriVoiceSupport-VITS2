@@ -532,14 +532,14 @@ def train_and_evaluate(
                     optim_g,
                     hps.train.learning_rate,
                     epoch,
-                    os.path.join(hps.checkpoint_dir, "G_{}.pth".format(global_step)),
+                    os.path.join(hps.train.checkpoint_dir, "G_{}.pth".format(global_step)),
                 )
                 utils.save_checkpoint(
                     net_d,
                     optim_d,
                     hps.train.learning_rate,
                     epoch,
-                    os.path.join(hps.checkpoint_dir, "D_{}.pth".format(global_step)),
+                    os.path.join(hps.train.checkpoint_dir, "D_{}.pth".format(global_step)),
                 )
                 if net_dur_disc is not None:
                     utils.save_checkpoint(
@@ -547,9 +547,9 @@ def train_and_evaluate(
                         optim_dur_disc,
                         hps.train.learning_rate,
                         epoch,
-                        os.path.join(hps.checkpoint_dir, "DUR_{}.pth".format(global_step)),
+                        os.path.join(hps.train.checkpoint_dir, "DUR_{}.pth".format(global_step)),
                     )
-                utils.remove_old_checkpoints(hps.checkpoint_dir, prefixes=["G_*.pth", "D_*.pth", "DUR_*.pth"])
+                utils.remove_old_checkpoints(hps.train.checkpoint_dir, prefixes=["G_*.pth", "D_*.pth", "DUR_*.pth"])
         global_step += 1
 
     if rank == 0:
