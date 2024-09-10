@@ -118,7 +118,7 @@ def plot_spectrogram_to_numpy(spectrogram):
         matplotlib.use("Agg")
         MATPLOTLIB_FLAG = True
         mpl_logger = logging.getLogger("matplotlib")
-        mpl_logger.setLevel(logging.WARNING)
+        mpl_logger.setLevel(logging.INFO)
     import matplotlib.pylab as plt
     import numpy as np
 
@@ -144,7 +144,7 @@ def plot_alignment_to_numpy(alignment, info=None):
         matplotlib.use("Agg")
         MATPLOTLIB_FLAG = True
         mpl_logger = logging.getLogger("matplotlib")
-        mpl_logger.setLevel(logging.WARNING)
+        mpl_logger.setLevel(logging.INFO)
     import matplotlib.pylab as plt
     import numpy as np
 
