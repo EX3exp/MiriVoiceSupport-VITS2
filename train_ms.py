@@ -235,6 +235,7 @@ def run(rank, n_gpus, hps):
             net_dur_disc, device_ids=[rank], find_unused_parameters=True)
 
     try:
+      print("loading ckpt")
         _, _, _, epoch_str = utils.load_checkpoint(
             utils.latest_checkpoint_path(hps.checkpoint_dir, "G_*.pth"), net_g, optim_g
         )
