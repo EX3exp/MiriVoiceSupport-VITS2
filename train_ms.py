@@ -236,14 +236,14 @@ def run(rank, n_gpus, hps):
 
     try:
         _, _, _, epoch_str = utils.load_checkpoint(
-            utils.latest_checkpoint_path(hps.model_dir, "G_*.pth"), net_g, optim_g
+            utils.latest_checkpoint_path(hps.checkpoint_dir, "G_*.pth"), net_g, optim_g
         )
         _, _, _, epoch_str = utils.load_checkpoint(
-            utils.latest_checkpoint_path(hps.model_dir, "D_*.pth"), net_d, optim_d
+            utils.latest_checkpoint_path(hps.checkpoint_dir, "D_*.pth"), net_d, optim_d
         )
         if net_dur_disc is not None:
             _, _, _, epoch_str = utils.load_checkpoint(
-                utils.latest_checkpoint_path(hps.model_dir, "DUR_*.pth"),
+                utils.latest_checkpoint_path(hps.checkpoint_dir, "DUR_*.pth"),
                 net_dur_disc,
                 optim_dur_disc,
             )
