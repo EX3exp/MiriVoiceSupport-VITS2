@@ -1,7 +1,7 @@
 {
     "train": {
       "log_interval": 200,
-      "eval_interval": 200,
+      "eval_interval": 1000,
       "checkpoint_dir": "/content/drive/MyDrive/MiriVoice/VITS2/checkpoints",
       "seed": 42,
       "epochs": 10000,
