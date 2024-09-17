@@ -5,7 +5,7 @@
       "checkpoint_dir": "/content/drive/MyDrive/MiriVoice/VITS2/checkpoints",
       "seed": 42,
       "epochs": 10000,
-      "learning_rate": 0.0001,
+      "learning_rate": 1e-5,
       "betas": [0.8, 0.99],
       "eps": 1e-9,
       "batch_size": 32,
