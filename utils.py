@@ -72,7 +72,7 @@ def summarize(
     histograms={},
     images={},
     audios={},
-    audio_sampling_rate=22050,
+    audio_sampling_rate=44100,
 ):
     for k, v in scalars.items():
         writer.add_scalar(k, v, global_step)
