@@ -37,7 +37,7 @@
     "model": {
       "use_mel_posterior_encoder": true,
       "use_transformer_flows": true,
-      "transformer_flow_type": "fft",
+      "transformer_flow_type": "mono_layer_inter_residual",
       "use_spk_conditioned_encoder": true,
       "use_noise_scaled_mas": true,
       "use_duration_discriminator": true,
