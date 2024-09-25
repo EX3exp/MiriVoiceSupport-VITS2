@@ -12,7 +12,7 @@ OPSET_VERSION = 15
 
 
 def main() -> None:
-    torch.manual_seed(1234)
+    
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -31,7 +31,7 @@ def main() -> None:
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
     hps = utils.get_hparams_from_file(args.config_path)
-
+    torch.manual_seed(hps.train.seed)
     if (
         "use_mel_posterior_encoder" in hps.model.keys()
         and hps.model.use_mel_posterior_encoder == True
