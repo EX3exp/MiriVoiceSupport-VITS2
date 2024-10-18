@@ -494,6 +494,11 @@ class DistributedBucketSampler(torch.utils.data.distributed.DistributedSampler):
 
             # add extra samples to make it evenly divisible
             rem = num_samples_bucket - len_bucket
+
+            if len_bucket == 0:
+                print(f"Warning: bucket {i} is empty. Skipping.")
+                continue
+              
             ids_bucket = (
                 ids_bucket
                 + ids_bucket * (rem // len_bucket)
