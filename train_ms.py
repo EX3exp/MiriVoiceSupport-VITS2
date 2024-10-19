@@ -558,6 +558,7 @@ def train_and_evaluate(
 
 def evaluate(hps, generator, eval_loader, writer_eval):
     generator.eval()
+    x, x_lengths, spec, spec_lengths, y, y_lengths, speakers = None, None, None, None, None, None, None
     with torch.no_grad():
         for batch_idx, (
             x,
@@ -568,6 +569,10 @@ def evaluate(hps, generator, eval_loader, writer_eval):
             y_lengths,
             speakers,
         ) in enumerate(eval_loader):
+            if x is None or x_lengths is None:
+                print("Empty batch detected.")
+                continue  # skip if batch is empty
+              
             x, x_lengths = x.cuda(0), x_lengths.cuda(0)
             spec, spec_lengths = spec.cuda(0), spec_lengths.cuda(0)
             y, y_lengths = y.cuda(0), y_lengths.cuda(0)
@@ -582,9 +587,13 @@ def evaluate(hps, generator, eval_loader, writer_eval):
             y_lengths = y_lengths[:1]
             speakers = speakers[:1]
             break
-        y_hat, attn, mask, *_ = generator.module.infer(
-            x, x_lengths, speakers, max_len=1000
-        )
+        if x is not None:  
+            y_hat, attn, mask, *_ = generator.module.infer(
+                x, x_lengths, speakers, max_len=1000
+            )
+        else:
+            print("Inference could not be performed as input is not available.")
+          
         y_hat_lengths = mask.sum([1, 2]).long() * hps.data.hop_length
 
         if hps.model.use_mel_posterior_encoder or hps.data.use_mel_posterior_encoder:
