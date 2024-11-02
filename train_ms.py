@@ -558,7 +558,6 @@ def train_and_evaluate(
 
 def evaluate(hps, generator, eval_loader, writer_eval):
     generator.eval()
-    x, x_lengths, spec, spec_lengths, y, y_lengths, speakers = None, None, None, None, None, None, None
     with torch.no_grad():
         for batch_idx, (
             x,
@@ -569,10 +568,6 @@ def evaluate(hps, generator, eval_loader, writer_eval):
             y_lengths,
             speakers,
         ) in enumerate(eval_loader):
-            if x is None or x_lengths is None:
-                print("Empty batch detected.")
-                continue  # skip if batch is empty
-              
             x, x_lengths = x.cuda(0), x_lengths.cuda(0)
             spec, spec_lengths = spec.cuda(0), spec_lengths.cuda(0)
             y, y_lengths = y.cuda(0), y_lengths.cuda(0)
@@ -586,55 +581,51 @@ def evaluate(hps, generator, eval_loader, writer_eval):
             y = y[:1]
             y_lengths = y_lengths[:1]
             speakers = speakers[:1]
-            break
-        if x is not None:  
-            y_hat, attn, mask, *_ = generator.module.infer(
-                x, x_lengths, speakers, max_len=1000
-            )
-        else:
-            print("Inference could not be performed as input is not available.")
-          
-        y_hat_lengths = mask.sum([1, 2]).long() * hps.data.hop_length
+            # break
+            y_hat, attn, mask, *_ = generator.module.infer(x, x_lengths, speakers, max_len=1000)
+            y_hat_lengths = mask.sum([1, 2]).long() * hps.data.hop_length
 
-        if hps.model.use_mel_posterior_encoder or hps.data.use_mel_posterior_encoder:
-            mel = spec
-        else:
-            mel = spec_to_mel_torch(
-                spec,
+            if hps.model.use_mel_posterior_encoder or hps.data.use_mel_posterior_encoder:
+                mel = spec
+            else:
+                mel = spec_to_mel_torch(
+                    spec,
+                    hps.data.filter_length,
+                    hps.data.n_mel_channels,
+                    hps.data.sampling_rate,
+                    hps.data.mel_fmin,
+                    hps.data.mel_fmax,
+                )
+            y_hat_mel = mel_spectrogram_torch(
+                y_hat.squeeze(1).float(),
                 hps.data.filter_length,
                 hps.data.n_mel_channels,
                 hps.data.sampling_rate,
+                hps.data.hop_length,
+                hps.data.win_length,
                 hps.data.mel_fmin,
                 hps.data.mel_fmax,
             )
-        y_hat_mel = mel_spectrogram_torch(
-            y_hat.squeeze(1).float(),
-            hps.data.filter_length,
-            hps.data.n_mel_channels,
-            hps.data.sampling_rate,
-            hps.data.hop_length,
-            hps.data.win_length,
-            hps.data.mel_fmin,
-            hps.data.mel_fmax,
-        )
-    image_dict = {
-        "gen/mel": utils.plot_spectrogram_to_numpy(y_hat_mel[0].cpu().numpy())
-    }
-    audio_dict = {"gen/audio": y_hat[0, :, : y_hat_lengths[0]]}
-    if global_step == 0:
-        image_dict.update(
-            {"gt/mel": utils.plot_spectrogram_to_numpy(mel[0].cpu().numpy())}
-        )
-        audio_dict.update({"gt/audio": y[0, :, : y_lengths[0]]})
-
-    utils.summarize(
-        writer=writer_eval,
-        global_step=global_step,
-        images=image_dict,
-        audios=audio_dict,
-        audio_sampling_rate=hps.data.sampling_rate,
-    )
-    generator.train()
+            image_dict = {
+                "gen/mel": utils.plot_spectrogram_to_numpy(y_hat_mel[0].cpu().numpy())
+            }
+            audio_dict = {"gen/audio": y_hat[0, :, : y_hat_lengths[0]]}
+            if global_step == 0:
+                image_dict.update(
+                    {"gt/mel": utils.plot_spectrogram_to_numpy(mel[0].cpu().numpy())}
+                )
+                audio_dict.update({"gt/audio": y[0, :, : y_lengths[0]]})
+            break
+            # global image_dict
+            # global writer_eval
+            utils.summarize(
+                writer=writer_eval,
+                global_step=global_step,
+                images=image_dict,
+                audios=audio_dict,
+                audio_sampling_rate=hps.data.sampling_rate,
+            )
+            generator.train()
 
 
 if __name__ == "__main__":
