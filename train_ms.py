@@ -63,7 +63,7 @@ def run(rank, n_gpus, hps):
         writer_eval = SummaryWriter(log_dir=os.path.join(hps.model_dir, "eval"))
 
     dist.init_process_group(
-        backend="nccl", init_method="env://", world_size=n_gpus, rank=rank
+        backend="gloo", init_method="env://", world_size=n_gpus, rank=rank
     )
     torch.manual_seed(hps.train.seed)
     torch.cuda.set_device(rank)
@@ -206,12 +206,14 @@ def run(rank, n_gpus, hps):
         hps.train.learning_rate,
         betas=hps.train.betas,
         eps=hps.train.eps,
+        amsgrad=True,
     )
     optim_d = torch.optim.AdamW(
         net_d.parameters(),
         hps.train.learning_rate,
         betas=hps.train.betas,
         eps=hps.train.eps,
+        amsgrad=True,
     )
     if net_dur_disc is not None:
         optim_dur_disc = torch.optim.AdamW(
@@ -219,6 +221,7 @@ def run(rank, n_gpus, hps):
             hps.train.learning_rate,
             betas=hps.train.betas,
             eps=hps.train.eps,
+            amsgrad=True,
         )
     else:
         optim_dur_disc = None
@@ -228,11 +231,11 @@ def run(rank, n_gpus, hps):
     # and ResidualCouplingTransformersLayer's self.post_transformer
     # we don't have to set find_unused_parameters=True
     # but I will not proceed with commenting out for compatibility with the latest work for others
-    net_g = DDP(net_g, device_ids=[rank], find_unused_parameters=True)
-    net_d = DDP(net_d, device_ids=[rank], find_unused_parameters=True)
+    net_g = DDP(net_g, device_ids=[rank], find_unused_parameters=False)
+    net_d = DDP(net_d, device_ids=[rank], find_unused_parameters=False)
     if net_dur_disc is not None:
         net_dur_disc = DDP(
-            net_dur_disc, device_ids=[rank], find_unused_parameters=True)
+            net_dur_disc, device_ids=[rank], find_unused_parameters=False)
 
     try:
         _, _, _, epoch_str = utils.load_checkpoint(
@@ -558,6 +561,8 @@ def train_and_evaluate(
 
 def evaluate(hps, generator, eval_loader, writer_eval):
     generator.eval()
+    image_dict = {}
+    audio_dict = {}
     with torch.no_grad():
         for batch_idx, (
             x,
@@ -615,17 +620,15 @@ def evaluate(hps, generator, eval_loader, writer_eval):
                     {"gt/mel": utils.plot_spectrogram_to_numpy(mel[0].cpu().numpy())}
                 )
                 audio_dict.update({"gt/audio": y[0, :, : y_lengths[0]]})
-            break
-            # global image_dict
-            # global writer_eval
-            utils.summarize(
-                writer=writer_eval,
-                global_step=global_step,
-                images=image_dict,
-                audios=audio_dict,
-                audio_sampling_rate=hps.data.sampling_rate,
-            )
-            generator.train()
+            # break
+    utils.summarize(
+        writer=writer_eval,
+        global_step=global_step,
+        images=image_dict,
+        audios=audio_dict,
+        audio_sampling_rate=hps.data.sampling_rate,
+    )
+    generator.train()
 
 
 if __name__ == "__main__":
