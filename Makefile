@@ -12,13 +12,15 @@ PATCH_VERSION := 1
 
 VERSION := $(MAJOR_VERSION).$(MINOR_VERSION).$(PATCH_VERSION)
 
-all:
-	echo "Please specify a target"
+.PHONY: all build tag run tensorboard
+
+all: build tag run
+
 build:
 	docker build -t mirivoice/vits .
 tag:
 	docker tag mirivoice/vits mirivoice/vits:$(VERSION)
 run:
-	docker run --gpus all -it --rm -v $(pwd):/workspace -w /workspace mirivoice/vits:$(VERSION)
+	docker run --gpus all -it --rm --ipc=host -v $(pwd):/workspace -w /workspace mirivoice/vits:$(VERSION)
 tensorboard:
-	docker run --gpus all -it --rm -v $(pwd):/workspace -w /workspace mirivoice/vits:$(VERSION) tensorboard --logdir=/workspace/logs
+	docker run --gpus all -it --rm --ipc=host -v $(pwd):/workspace -w /workspace mirivoice/vits:$(VERSION) tensorboard --logdir=/workspace/logs
