@@ -9,7 +9,8 @@ RUN pip install -r requirements.txt --no-cache-dir
 RUN apt-get update -y && apt-get install -y \
     espeak \
     aria2 \
-    unzip
+    unzip \
+    git
 
 RUN echo "Creating directories..." && \
     mkdir -p "/workspace/train/dataset" && \
