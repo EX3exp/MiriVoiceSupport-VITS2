@@ -126,8 +126,8 @@ def preprocess_audio(progress=gr.Progress()):
 
     return f"{train_result}\n{valid_result}"
 
-def start_training():
-    import train
+def start_training(model_name, config_path):
+    import train_ms as train
 
     if not torch.cuda.is_available():
         return "CPU 학습은 지원하지 않습니다. GPU가 필요합니다."
@@ -139,10 +139,20 @@ def start_training():
 
         # 하이퍼파라미터 로드
         hps = utils.get_hparams_from_file(os.path.join('configs', config_path))
+        hps.model_dir = os.path.join('logs', model_name)
+
+        hps.n_mel_channels = hps.data.n_mel_channels
 
         # 학습 시작
-        mp.spawn(train.run, nprocs=torch.cuda.device_count(),
-                args=(torch.cuda.device_count(), hps))
+        n_gpus = torch.cuda.device_count()
+        mp.spawn(
+            train.run,
+            nprocs=n_gpus,
+            args=(
+                n_gpus,
+                hps,
+            ),
+        )
 
         return "학습이 시작되었습니다."
 
@@ -195,31 +205,34 @@ def create_training_interface():
                     # GPU 개수 표시
                     n_gpus = gr.Number(label="사용 가능한 GPU 수", value=torch.cuda.device_count())
 
+                    # 모델 이름
+                    model_name = gr.Text(label="모델 이름", interactive=True)
+
                     # 학습 시작 버튼
                     btn_train = gr.Button("학습 시작")
 
                     btn_train.click(
                         fn=start_training,
-                        inputs=[],
+                        inputs=[model_name, config_path],
                         outputs=[gr.Text(label="상태")]
                     )
 
-                    gr.Markdown("## 텐서보드")
-                    gr.Markdown("### 학습 모니터링")
-                    btn_tensorboard = gr.Button("텐서보드 열기")
+                    # gr.Markdown("## 텐서보드")
+                    # gr.Markdown("### 학습 모니터링")
+                    # btn_tensorboard = gr.Button("텐서보드 열기")
 
-                    def launch_tensorboard():
-                        try:
-                            subprocess.Popen(["tensorboard", "--logdir=train/logs", "--port=6006"])
-                            return "텐서보드가 시작되었습니다. http://localhost:6006 에서 확인하세요."
-                        except Exception as e:
-                            return f"텐서보드 실행 중 오류 발생: {str(e)}"
+                    # def launch_tensorboard():
+                    #     try:
+                    #         subprocess.Popen(["tensorboard", "--logdir=train/logs", "--port=6006"])
+                    #         return "텐서보드가 시작되었습니다. http://localhost:6006 에서 확인하세요."
+                    #     except Exception as e:
+                    #         return f"텐서보드 실행 중 오류 발생: {str(e)}"
 
-                    btn_tensorboard.click(
-                        fn=launch_tensorboard,
-                        inputs=[],
-                        outputs=[gr.Text(label="상태")]
-                    )
+                    # btn_tensorboard.click(
+                    #     fn=launch_tensorboard,
+                    #     inputs=[],
+                    #     outputs=[gr.Text(label="상태")]
+                    # )
 
     return training_app
 
@@ -227,4 +240,4 @@ def create_training_interface():
 if __name__ == "__main__":
     print(setup_workspace())
     app = create_training_interface()
-    app.launch()
+    app.launch(server_name="0.0.0.0")

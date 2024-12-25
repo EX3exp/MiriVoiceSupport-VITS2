@@ -10,4 +10,4 @@ build
 *.c
 monotonic_align/monotonic_align
 checkpoints/*
-
+train/*
