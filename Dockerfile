@@ -6,21 +6,10 @@ COPY requirements.txt .
 
 RUN pip install -r requirements.txt --no-cache-dir
 
-RUN apt-get update -y && apt-get install -y \
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
     espeak \
     aria2 \
     unzip \
-    git
-
-RUN echo "Creating directories..." && \
-    mkdir -p "/workspace/train/dataset" && \
-    mkdir -p "/workspace/voicer" && \
-    mkdir -p "/workspace/checkpoints" && \
-    mkdir -p "/workspace/train"
-
-COPY monotonic_align /workspace/monotonic_align
-RUN echo "Installing monotonic_align..." && \
-    cd /workspace/monotonic_align && \
-    python setup.py build_ext --inplace
+    && rm -rf /var/lib/apt/lists/*
 
 ENTRYPOINT [ "/bin/bash" ]
