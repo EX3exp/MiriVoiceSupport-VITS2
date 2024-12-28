@@ -10,6 +10,7 @@ MAJOR_VERSION := 0
 MINOR_VERSION := 0
 PATCH_VERSION := 1
 
+IMAGE_NAME := teamcoda/vits
 VERSION := $(MAJOR_VERSION).$(MINOR_VERSION).$(PATCH_VERSION)
 
 .PHONY: all build tag run
@@ -17,20 +18,20 @@ VERSION := $(MAJOR_VERSION).$(MINOR_VERSION).$(PATCH_VERSION)
 all: build tag run
 
 build:
-	docker build -t mirivoice/vits .
+	docker build -t $(IMAGE_NAME) .
 tag:
-	docker tag mirivoice/vits mirivoice/vits:$(VERSION)
+	docker tag $(IMAGE_NAME) $(IMAGE_NAME):$(VERSION)
 run:
 	docker run --gpus all -it --rm --ipc=host \
 			    -v $(pwd):/workspace \
 			    -w /workspace \
 				-p 6006:6006 \
 				-p 7860:7860 \
-				mirivoice/vits:$(VERSION)
+				$(IMAGE_NAME):$(VERSION)
 
 tensorboard:
 	docker run --gpus all -it --rm --ipc=host \
 			    -v $(pwd):/workspace \
 			    -w /workspace \
 				-p 6006:6006 \
-				mirivoice/vits:$(VERSION) tensorboard --logdir=/workspace/logs
+				$(IMAGE_NAME):$(VERSION) tensorboard --logdir=/workspace/logs
