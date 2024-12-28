@@ -20,13 +20,9 @@ MODEL_URLS = {
 def setup_workspace():
     # 필요한 디렉토리 생성
     directories = [
-        "voicer",
         "checkpoints",
         "train",
-        "train/dataset",
-        "train/logs",
-        "train/logs/train",
-        "train/logs/val",
+        "logs",
     ]
 
     for directory in directories:
@@ -198,17 +194,9 @@ def create_training_interface():
                     gr.Markdown("### 학습 설정")
 
                     config_path = gr.Dropdown(label="config 파일", choices=os.listdir('configs'), interactive=True)
-
-                    # CUDA 사용 가능 여부 확인
                     cuda_available = gr.Text(label="CUDA 상태", value="CUDA " + ("사용 가능" if torch.cuda.is_available() else "사용 불가"))
-
-                    # GPU 개수 표시
                     n_gpus = gr.Number(label="사용 가능한 GPU 수", value=torch.cuda.device_count())
-
-                    # 모델 이름
                     model_name = gr.Text(label="모델 이름", interactive=True)
-
-                    # 학습 시작 버튼
                     btn_train = gr.Button("학습 시작")
 
                     btn_train.click(
@@ -217,22 +205,22 @@ def create_training_interface():
                         outputs=[gr.Text(label="상태")]
                     )
 
-                    # gr.Markdown("## 텐서보드")
-                    # gr.Markdown("### 학습 모니터링")
-                    # btn_tensorboard = gr.Button("텐서보드 열기")
+                    gr.Markdown("## 텐서보드")
+                    gr.Markdown("### 학습 모니터링")
+                    btn_tensorboard = gr.Button("텐서보드 열기")
 
-                    # def launch_tensorboard():
-                    #     try:
-                    #         subprocess.Popen(["tensorboard", "--logdir=train/logs", "--port=6006"])
-                    #         return "텐서보드가 시작되었습니다. http://localhost:6006 에서 확인하세요."
-                    #     except Exception as e:
-                    #         return f"텐서보드 실행 중 오류 발생: {str(e)}"
+                    def launch_tensorboard():
+                        try:
+                            subprocess.Popen(["tensorboard", "--logdir=logs", "--port=6006", "--host=0.0.0.0"])
+                            return "텐서보드가 시작되었습니다.  \n[http://localhost:6006](http://localhost:6006) 에서 확인하세요."
+                        except Exception as e:
+                            return f"텐서보드 실행 중 오류 발생: {str(e)}"
 
-                    # btn_tensorboard.click(
-                    #     fn=launch_tensorboard,
-                    #     inputs=[],
-                    #     outputs=[gr.Text(label="상태")]
-                    # )
+                    btn_tensorboard.click(
+                        fn=launch_tensorboard,
+                        inputs=[],
+                        outputs=[gr.Markdown(label="상태")]
+                    )
 
     return training_app
 
