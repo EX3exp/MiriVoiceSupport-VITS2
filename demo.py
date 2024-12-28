@@ -12,6 +12,7 @@ import librosa
 import soundfile as sf
 import utils
 import torch.multiprocessing as mp
+import glob
 
 MODEL_URLS = {
     "Miri": "https://github.com/EX3exp/MiriVoiceSupport-VITS2/releases/latest/download/Base_Miri.zip",
@@ -127,6 +128,11 @@ def start_training(model_name, config_path):
 
     if not torch.cuda.is_available():
         return "CPU 학습은 지원하지 않습니다. GPU가 필요합니다."
+
+    cache_files = glob.glob('train/*/*.pt')
+    if cache_files:
+        for file in cache_files:
+            os.remove(file)
 
     try:
         # 환경 변수 설정
