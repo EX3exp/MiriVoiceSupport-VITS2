@@ -73,7 +73,7 @@ def run(rank, n_gpus, hps):
         and hps.model.use_mel_posterior_encoder == True
     ):
         print("Using mel posterior encoder for VITS2")
-        posterior_channels = 80  # vits2
+        posterior_channels = 128  # vits2
         hps.data.use_mel_posterior_encoder = True
     else:
         print("Using lin posterior encoder for VITS1")
