@@ -1,15 +1,14 @@
-import os
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import argparse
 import itertools
 import json
 import math
 import os
-
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["_TF_DISABLE_GPU"] = "1"
 import torch
 import torch.distributed as dist
-from tensorboardX import SummaryWriter
+# from tensorboardX import SummaryWriter
 import torch.multiprocessing as mp
 import tqdm
 from torch import nn, optim
@@ -17,7 +16,7 @@ from torch.cuda.amp import GradScaler, autocast
 from torch.nn import functional as F
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader
-# from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 import commons
 import models
