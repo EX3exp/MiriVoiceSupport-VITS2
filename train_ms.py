@@ -246,9 +246,11 @@ def run(rank, n_gpus, hps):
             net_dur_disc, device_ids=[rank], find_unused_parameters=False)
     
     if hasattr(torch, 'compile'):
+        net_g = torch.compile(net_g)
         net_d = torch.compile(net_d)
         if net_dur_disc is not None:
             net_dur_disc = torch.compile(net_dur_disc)
+
     try:
         _, _, _, epoch_str = utils.load_checkpoint(
             utils.latest_checkpoint_path(hps.train.checkpoint_dir, "G_*.pth"), net_g, optim_g
