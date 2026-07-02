@@ -33,7 +33,7 @@ from text.symbols import symbols
 
 torch.backends.cudnn.benchmark = True
 global_step = 0
-
+exists_gt_on_tensorboard = False
 
 def main():
     """Assume Single Node Multi GPUs Training Only"""
@@ -75,7 +75,7 @@ def run(rank, n_gpus, hps):
         and hps.model.use_mel_posterior_encoder == True
     ):
         print("Using mel posterior encoder for VITS2")
-        posterior_channels = 128  # vits2
+        posterior_channels = hps.data.n_mel_channels  # vits2
         hps.data.use_mel_posterior_encoder = True
     else:
         print("Using lin posterior encoder for VITS1")
@@ -617,10 +617,12 @@ def evaluate(hps, generator, eval_loader, writer_eval):
                 "gen/mel": utils.plot_spectrogram_to_numpy(y_hat_mel[0].cpu().numpy())
             }
             audio_dict = {"gen/audio": y_hat[0, :, : y_hat_lengths[0]]}
-            image_dict.update(
-                {"gt/mel": utils.plot_spectrogram_to_numpy(mel[0].cpu().numpy())}
-            )
-            audio_dict.update({"gt/audio": y[0, :, : y_lengths[0]]})
+            if not exists_gt_on_tensorboard:
+                image_dict.update(
+                    {"gt/mel": utils.plot_spectrogram_to_numpy(mel[0].cpu().numpy())}
+                )
+                audio_dict.update({"gt/audio": y[0, :, : y_lengths[0]]})
+                exists_gt_on_tensorboard = True
             # break
     utils.summarize(
         writer=writer_eval,
