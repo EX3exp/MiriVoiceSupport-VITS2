@@ -259,14 +259,18 @@ def run(rank, n_gpus, hps):
         if net_dur_disc is not None:
             try:
                 dur_checkpoint_path = utils.latest_checkpoint_path(hps.train.checkpoint_dir, "DUR_*.pth")
-                _, _, _, epoch_str = utils.load_checkpoint(
-                    dur_checkpoint_path,
-                    net_dur_disc,
-                    optim_dur_disc,
-                )
-                print("==> DUR checkpoint loaded successfully.")
+                
+                if dur_checkpoint_path and os.path.exists(dur_checkpoint_path):
+                    _, _, _, epoch_str_dur = utils.load_checkpoint(
+                        dur_checkpoint_path,
+                        net_dur_disc,
+                        optim_dur_disc,
+                    )
+                    print(f"==> DUR checkpoint loaded successfully. (path: {dur_checkpoint_path})")
+                else:
+                    print("==> [Info] DUR checkpoint file not found. Starting DUR from scratch.")
             except Exception as e:
-                print(f"==> [Warning] DUR checkpoint not found or failed to load ({e}). Starting DUR from scratch.")
+                print(f"==> [Warning] Failed to load DUR checkpoint ({e}). Starting DUR from scratch.")
         global_step = (epoch_str - 1) * len(train_loader)
         exists_gt_on_tensorboard = False
     except:
@@ -280,8 +284,12 @@ def run(rank, n_gpus, hps):
         optim_d, gamma=hps.train.lr_decay, last_epoch=epoch_str - 2
     )
     if net_dur_disc is not None:
+        is_dur_resumed = "initial_lr" in optim_dur_disc.param_groups[0]
+        
         scheduler_dur_disc = torch.optim.lr_scheduler.ExponentialLR(
-            optim_dur_disc, gamma=hps.train.lr_decay, last_epoch=epoch_str - 2
+            optim_dur_disc, 
+            gamma=hps.train.lr_decay, 
+            last_epoch=epoch_str - 2 if is_dur_resumed else -1
         )
     else:
         scheduler_dur_disc = None
