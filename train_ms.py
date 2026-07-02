@@ -65,8 +65,9 @@ def run(rank, n_gpus, hps):
         writer = SummaryWriter(log_dir=hps.model_dir)
         writer_eval = SummaryWriter(log_dir=os.path.join(hps.model_dir, "eval"))
 
+# if you are training local, change "nccl" into "gloo".
     dist.init_process_group(
-        backend="gloo", init_method="env://", world_size=n_gpus, rank=rank
+        backend="nccl", init_method="env://", world_size=n_gpus, rank=rank
     )
     torch.manual_seed(hps.train.seed)
     torch.cuda.set_device(rank)
@@ -100,6 +101,7 @@ def run(rank, n_gpus, hps):
         pin_memory=True,
         collate_fn=collate_fn,
         batch_sampler=train_sampler,
+        persistent_workers=True
     )
     if rank == 0:
         eval_dataset = TextAudioSpeakerLoader(hps.data.validation_files, hps.data)
@@ -111,6 +113,7 @@ def run(rank, n_gpus, hps):
             pin_memory=True,
             drop_last=False,
             collate_fn=collate_fn,
+            persistent_workers=True
         )
     # some of these flags are not being used in the code and directly set in hps json file.
     # they are kept here for reference and prototyping.
@@ -172,7 +175,8 @@ def run(rank, n_gpus, hps):
         assert (
             duration_discriminator_type in AVAILABLE_DURATION_DISCRIMINATOR_TYPES
         ), f"duration_discriminator_type must be one of {AVAILABLE_DURATION_DISCRIMINATOR_TYPES}"
-        duration_discriminator_type = AVAILABLE_DURATION_DISCRIMINATOR_TYPES
+        
+        #duration_discriminator_type = AVAILABLE_DURATION_DISCRIMINATOR_TYPES
         if duration_discriminator_type == "dur_disc_1":
             net_dur_disc = DurationDiscriminatorV1(
                 hps.model.hidden_channels,
@@ -234,12 +238,17 @@ def run(rank, n_gpus, hps):
     # and ResidualCouplingTransformersLayer's self.post_transformer
     # we don't have to set find_unused_parameters=True
     # but I will not proceed with commenting out for compatibility with the latest work for others
+
     net_g = DDP(net_g, device_ids=[rank], find_unused_parameters=False)
     net_d = DDP(net_d, device_ids=[rank], find_unused_parameters=False)
     if net_dur_disc is not None:
         net_dur_disc = DDP(
             net_dur_disc, device_ids=[rank], find_unused_parameters=False)
-
+    
+    if hasattr(torch, 'compile'):
+        net_d = torch.compile(net_d)
+        if net_dur_disc is not None:
+            net_dur_disc = torch.compile(net_dur_disc)
     try:
         _, _, _, epoch_str = utils.load_checkpoint(
             utils.latest_checkpoint_path(hps.train.checkpoint_dir, "G_*.pth"), net_g, optim_g
@@ -424,7 +433,7 @@ def train_and_evaluate(
                         losses_dur_disc_g,
                     ) = discriminator_loss(y_dur_hat_r, y_dur_hat_g)
                     loss_dur_disc_all = loss_dur_disc
-                optim_dur_disc.zero_grad()
+                optim_dur_disc.zero_grad(set_to_none=True)
                 scaler.scale(loss_dur_disc_all).backward()
                 scaler.unscale_(optim_dur_disc)
                 grad_norm_dur_disc = commons.clip_grad_value_(
@@ -432,7 +441,7 @@ def train_and_evaluate(
                 )
                 scaler.step(optim_dur_disc)
 
-        optim_d.zero_grad()
+        optim_d.zero_grad(set_to_none=True)
         scaler.scale(loss_disc_all).backward()
         scaler.unscale_(optim_d)
         grad_norm_d = commons.clip_grad_value_(net_d.parameters(), None)
@@ -455,7 +464,7 @@ def train_and_evaluate(
                     loss_dur_gen, losses_dur_gen = generator_loss(y_dur_hat_g)
                     loss_gen_all += loss_dur_gen
 
-        optim_g.zero_grad()
+        optim_g.zero_grad(set_to_none=True)
         scaler.scale(loss_gen_all).backward()
         scaler.unscale_(optim_g)
         grad_norm_g = commons.clip_grad_value_(net_g.parameters(), None)
