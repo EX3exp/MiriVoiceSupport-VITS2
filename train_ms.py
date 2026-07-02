@@ -57,6 +57,7 @@ def main():
 def run(rank, n_gpus, hps):
     net_dur_disc = None
     global global_step
+    global exists_gt_on_tensorboard
     if rank == 0:
         logger = utils.get_logger(hps.model_dir)
         logger.info(hps)
@@ -253,6 +254,7 @@ def run(rank, n_gpus, hps):
                 optim_dur_disc,
             )
         global_step = (epoch_str - 1) * len(train_loader)
+        exists_gt_on_tensorboard = False
     except:
         epoch_str = 1
         global_step = 0
@@ -562,6 +564,7 @@ def train_and_evaluate(
 
 
 def evaluate(hps, generator, eval_loader, writer_eval):
+    global exists_gt_on_tensorboard
     generator.eval()
     image_dict = {}
     audio_dict = {}
@@ -622,7 +625,8 @@ def evaluate(hps, generator, eval_loader, writer_eval):
                     {"gt/mel": utils.plot_spectrogram_to_numpy(mel[0].cpu().numpy())}
                 )
                 audio_dict.update({"gt/audio": y[0, :, : y_lengths[0]]})
-                exists_gt_on_tensorboard = True
+                
+                exists_gt_on_tensorboard = True    
             # break
     utils.summarize(
         writer=writer_eval,
