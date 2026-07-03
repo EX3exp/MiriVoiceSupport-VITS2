@@ -12,7 +12,7 @@
       "fp16_run": true,
       "lr_decay": 0.99987,
       "segment_size": 16384,
-      "init_lr_ratio": 1,
+      "init_lr_ratio": 0.1,
       "warmup_epochs": 3,
       "c_mel": 45,
       "c_kl": 1.0
