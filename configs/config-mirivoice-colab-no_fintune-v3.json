@@ -27,7 +27,7 @@
       "filter_length": 2048,
       "hop_length": 512,
       "win_length": 2048,
-      "n_mel_channels": 128,
+      "n_mel_channels": 80,
       "mel_fmin": 0.0,
       "mel_fmax": null,
       "add_blank": true,
