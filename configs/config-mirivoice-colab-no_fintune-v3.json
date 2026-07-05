@@ -14,8 +14,8 @@
       "segment_size": 16384,
       "init_lr_ratio": 1,
       "warmup_epochs": 0,
-      "c_mel": 50,
-      "c_kl": 1.2
+      "c_mel": 45,
+      "c_kl": 1.0
     },
     "data": {
       "use_mel_posterior_encoder": true,
