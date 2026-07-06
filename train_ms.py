@@ -471,7 +471,9 @@ def train_and_evaluate(
                 loss_gen_all = loss_gen + loss_fm + loss_mel + loss_dur + loss_kl
                 if net_dur_disc is not None:
                     loss_dur_gen, losses_dur_gen = generator_loss(y_dur_hat_g)
-                    loss_gen_all += loss_dur_gen
+                    
+                    c_dur_gen = getattr(hps.train, "c_dur_gen", 0.1) 
+                    loss_gen_all += loss_dur_gen * c_dur_gen
 
         optim_g.zero_grad(set_to_none=True)
         scaler.scale(loss_gen_all).backward()
