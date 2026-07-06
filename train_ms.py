@@ -374,6 +374,7 @@ def train_and_evaluate(
         speakers = speakers.cuda(rank, non_blocking=True)
 
         with autocast(enabled=hps.train.fp16_run):
+            g_emb = net_g.module.emb_g(speakers).unsqueeze(-1) if hps.data.n_speakers != 0 else None
             (
                 y_hat,
                 l_length,
@@ -432,7 +433,7 @@ def train_and_evaluate(
             # Duration Discriminator
             if net_dur_disc is not None:
                 y_dur_hat_r, y_dur_hat_g = net_dur_disc(
-                    hidden_x.detach(), x_mask.detach(), logw_.detach(), logw.detach()
+                    hidden_x.detach(), x_mask.detach(), logw_.detach(), logw.detach(), g=g_emb.detach()
                 )
                 with autocast(enabled=False):
                     # TODO: I think need to mean using the mask, but for now, just mean all
@@ -460,7 +461,8 @@ def train_and_evaluate(
             # Generator
             y_d_hat_r, y_d_hat_g, fmap_r, fmap_g = net_d(y, y_hat)
             if net_dur_disc is not None:
-                y_dur_hat_r, y_dur_hat_g = net_dur_disc(hidden_x, x_mask, logw_, logw)
+                y_dur_hat_r, y_dur_hat_g = net_dur_disc(hidden_x, x_mask, logw_, logw, g=g_emb.detach()
+                )
             with autocast(enabled=False):
                 loss_dur = torch.sum(l_length.float())
                 loss_mel = F.l1_loss(y_mel, y_hat_mel) * hps.train.c_mel
