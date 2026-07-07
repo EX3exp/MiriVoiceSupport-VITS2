@@ -10,7 +10,6 @@ from text.symbols import symbols
 
 OPSET_VERSION = 15
 
-
 def main() -> None:
     
 
@@ -37,7 +36,7 @@ def main() -> None:
         and hps.model.use_mel_posterior_encoder == True
     ):
         print("Using mel posterior encoder for VITS2")
-        posterior_channels = 80  # vits2
+        posterior_channels = hps.data.n_mel_channels
         hps.data.use_mel_posterior_encoder = True
     else:
         print("Using lin posterior encoder for VITS1")
@@ -101,6 +100,9 @@ def main() -> None:
             "input_lengths": {0: "batch_size"},
             "output": {0: "batch_size", 1: "time1", 2: "time2"},
         },
+        do_constant_folding=True,
+        export_params=True,
+        dynamo=False
     )
 
     print(f"Exported model to {args.output}")
