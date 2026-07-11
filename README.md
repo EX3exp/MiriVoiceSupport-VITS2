@@ -1,3 +1,7 @@
+## Local training docker Guide▼ | 로컬 학습용 도커 가이드▼
+https://github.com/EX3exp/MiriVoiceSupport-VITS2/blob/main/LocalTrainGuide.md
+<br>(Noel Kim 님께서 기여해 주신 로컬 훈련용 도커입니다.)
+
 # VITS2: Improving Quality and Efficiency of Single-Stage Text-to-Speech with Adversarial Learning and Architecture Design
 ### Jungil Kong, Jihoon Park, Beomjeong Kim, Jeongmin Kim, Dohee Kong, Sangjin Kim 
 Unofficial implementation of the [VITS2 paper](https://arxiv.org/abs/2307.16430), sequel to [VITS paper](https://arxiv.org/abs/2106.06103). (thanks to the authors for their work!)
